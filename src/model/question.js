@@ -13,10 +13,6 @@ let questions = new Schema({
     type: String,
     required: true
   },
-  userId: {
-    type: String,
-    required: true
-  },
 }, {
   collection: 'questions'
 })

@@ -8,7 +8,7 @@ let quiz = new Schema({
     type: String
   },
   expertiseLevel:{
-    type:String,
+    type:Number,
     default:1
   },
 }, {

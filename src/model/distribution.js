@@ -6,15 +6,15 @@ let distribution = new Schema({
     required: true
     },    
   RangeMin: {
-    type: String,
+    type: Number,
     default:1
   },
   RangeMax: {
-    type: String,
+    type: Number,
     default:1
   },
   countQuestion:{
-    type:String,
+    type:Number,
     default: 0
   },
 }, {
