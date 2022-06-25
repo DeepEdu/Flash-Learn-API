@@ -12,6 +12,7 @@ app.use(bodyParser.json())
 
 app.use('/question/v1', questionRoute)
 
+// Connecting to MongoDb
 mongoose
   .connect('mongodb://127.0.0.1:27017/Question')
   .then((x) => {
@@ -20,7 +21,8 @@ mongoose
   .catch((err) => {
     console.error('Error connecting to mongo', err.reason)
   })
-
+  
+// Port bind
 const port = process.env.PORT || 8081
 app.listen(port, () => {
   console.log('Listening on port ' + port)

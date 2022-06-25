@@ -25,7 +25,7 @@ questionRoute.route("/add-question").post((req, res, next) => {
   });
   
   function addToQuizCollection(qId, UserId) {
-    return quiz.create(
+    quiz.create(
       {
         quesId: qId,
         userId: UserId
@@ -42,7 +42,7 @@ questionRoute.route("/add-question").post((req, res, next) => {
       questionId: quesId,
       ...req.body
     }
-    return question.create(newQuestion, (error, data) => {
+    return question.create(newQuestion, (error) => {
       if (error) {
         return next(error);
       }
@@ -55,12 +55,13 @@ questionRoute.route("/add-question").post((req, res, next) => {
           if (error) {
             return next(error);
           } 
-          console.log("Success");
         })
         }
     }); 
-    return distribution.findOneAndUpdate({userId :UserId, RangeMax:1,RangeMin:1}, 
-      {$inc : {'countQuestion' : 1}},(error,data) => {
+    distribution.findOneAndUpdate({ userId :UserId, RangeMax: 1,RangeMin: 1 }, 
+      { 
+        $inc : {'countQuestion' : 1}
+      },(error) => {
         if (error) {
           return next(error);
         }
