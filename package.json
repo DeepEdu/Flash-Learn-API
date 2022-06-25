@@ -7,6 +7,7 @@
     "main": "node src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "include": ["src/**/*"],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/DeepEdu/Flash-Learn-API.git"
@@ -16,5 +17,8 @@
   "bugs": {
     "url": "https://github.com/DeepEdu/Flash-Learn-API/issues"
   },
-  "homepage": "https://github.com/DeepEdu/Flash-Learn-API#readme"
+  "homepage": "https://github.com/DeepEdu/Flash-Learn-API#readme",
+  "dependencies": {
+    "mongoose": "^6.4.0"
+  }
 }
