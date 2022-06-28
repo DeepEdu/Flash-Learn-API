@@ -32,6 +32,7 @@ questionRoute.route("/add-question").post((req, res, next) => {
       },
       (error) => {
         if (error) {
+          console.log(error);
           return (next(error));
         }
       }
@@ -44,6 +45,7 @@ questionRoute.route("/add-question").post((req, res, next) => {
     }
     return question.create(newQuestion, (error) => {
       if (error) {
+        console.log(error);
         return next(error);
       }
     });
@@ -53,6 +55,7 @@ questionRoute.route("/add-question").post((req, res, next) => {
       if(count==0){
         distribution.create({userId:UserId}, (error) => {
           if (error) {
+            console.log(error);
             return next(error);
           } 
         })
@@ -63,6 +66,7 @@ questionRoute.route("/add-question").post((req, res, next) => {
         $inc : {'countQuestion' : 1}
       },(error) => {
         if (error) {
+          console.log(error);
           return next(error);
         }
       })
