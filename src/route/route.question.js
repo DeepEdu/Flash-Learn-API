@@ -72,4 +72,19 @@ questionRoute.route("/add-question").post((req, res, next) => {
       })
   }  
 
+  // update Question in Question Collection
+questionRoute.route("/update-question/:id").put((req, res, next) => {
+  question.findOneAndUpdate( req.params.id,
+    { $set: req.body},
+    (error, data) => {
+      if (error) {
+        return next(error);
+      } else {
+        console.log("Question updated successfully!");
+        res.json(data);
+      }
+    }
+  );
+});
+  
   module.exports = questionRoute;
