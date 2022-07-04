@@ -72,4 +72,69 @@ questionRoute.route("/add-question").post((req, res, next) => {
       })
   }  
 
-  module.exports = questionRoute;
+// Delete Questions from Db
+questionRoute.route("/question/delete").delete((req) => {
+  var qId = req.body.questionId;
+  // Deleting From Question Collection
+  deleteFromQuestion(qId);
+
+  // Decrement total numberof Question for the Range of expertiselevel in  Distribution Collection
+  decrementFromDistribution(qId);
+
+  // Deleting Question from the Quiz Collections
+  deleteFromQuiz(qId);
+})
+
+// function to delete from Question Collection
+function deleteFromQuestion(qId){
+  question.deleteOne({questionId : qId}, (error,next) => {
+    if (error) {
+      console.log(error);
+      return next(error);
+    }else{
+      console.log("Question deleted Successfully from Question Collection");
+    }
+  })
+}
+// function to decrement total number of question from Distribution Collection
+function decrementFromDistribution(qId){
+  quiz.findOne( {quesId : qId} ,(error, data, next) => {
+    if (error) {
+      console.log(error);
+      return next(error);
+    }
+    else {
+      let x = data.expertiseLevel;
+      distribution.findOneAndUpdate({ "userId": data.userId, "RangeMin" : {$gte: x}, "RangeMax" : {$lte : x} }, 
+        { 
+            $inc : {'countQuestion' : -1} 
+        }, 
+        (error, countQue) => {
+        if (error){
+          console.log(error);
+          return next(error);
+        }else if(countQue.countQuestion <= 0){
+          console.log("Error");
+          return next(error);
+        }
+        else{
+          console.log("Decremented");
+        }
+      })          
+    }
+  })
+}
+// function to delete from Quiz Collection
+function deleteFromQuiz(qId){
+  quiz.deleteOne({quesId : qId}, (error) => {
+    if (error) {
+      console.log(error);
+      return next(error);
+    }else{
+      console.log("Question deleted Successfully from Quiz Collection");
+      res.json("Deleted");
+    }
+  })
+
+}
+module.exports = questionRoute;
