@@ -72,4 +72,38 @@ questionRoute.route("/add-question").post((req, res, next) => {
       })
   }  
 
+  // Get all Question of the User
+  questionRoute.route("/question/get").get(async (req, res) => {
+    const arr = [];
+    quiz.find( {userId : req.body.userId} )
+    .then(async (data) => {
+        for(let i =0; i< data.length; i++){
+          let y = data[i].quesId;
+          let q = await inQuestion(y);
+          arr.push(q);
+        }
+        res.json(arr);
+      })
+  });
+  
+  // function to find question from Question Collection
+  async function inQuestion(y){
+    return question.find( {questionId : y})
+    .then((data) => {
+      return data;
+    });
+  }
+
+  // Get Question By Id
+  questionRoute.route("/question/get/:id").get((req, res, next) => {
+    question.findById(req.params.id, (error, data) => {
+      if (error) {
+        console.log(error)
+        return next(error);
+      } else {
+        res.json(data);
+      }
+    });
+  });
+  
   module.exports = questionRoute;
