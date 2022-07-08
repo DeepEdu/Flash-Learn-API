@@ -73,16 +73,18 @@ questionRoute.route("/add-question").post((req, res, next) => {
   }  
 
 // Delete Questions from Db
-questionRoute.route("/question/delete").delete((req) => {
+questionRoute.route("/question/delete").delete((req, res) => {
   var qId = req.body.questionId;
-  // Deleting From Question Collection
-  deleteFromQuestion(qId);
-
+  var usrId = req.body.userId;
   // Decrement total numberof Question for the Range of expertiselevel in  Distribution Collection
-  decrementFromDistribution(qId);
+  updateDistribution(qId,usrId);
 
   // Deleting Question from the Quiz Collections
-  deleteFromQuiz(qId);
+  deleteFromQuiz(qId,usrId);
+
+  // Deleting From Question Collection
+  deleteFromQuestion(qId);
+  res.json("Question Deleted Successfully");
 })
 
 // function to delete from Question Collection
@@ -92,20 +94,20 @@ function deleteFromQuestion(qId){
       console.log(error);
       return next(error);
     }else{
-      console.log("Question deleted Successfully from Question Collection");
+      console.log("Question with QuesId { " + qId + " }deleted Successfully from Question Collection  ");
     }
   })
 }
 // function to decrement total number of question from Distribution Collection
-function decrementFromDistribution(qId){
-  quiz.findOne( {quesId : qId} ,(error, data, next) => {
+function updateDistribution(qId, usrId){
+  quiz.findOne( {UserId: usrId, quesId : qId} ,(error, data, next) => {
     if (error) {
       console.log(error);
       return next(error);
     }
     else {
       let x = data.expertiseLevel;
-      distribution.findOneAndUpdate({ "userId": data.userId, "RangeMin" : {$gte: x}, "RangeMax" : {$lte : x} }, 
+      distribution.findOneAndUpdate({ "userId": data.userId, "RangeMin" : {$gt: x}, "RangeMax" : {$lte : x} }, 
         { 
             $inc : {'countQuestion' : -1} 
         }, 
@@ -114,27 +116,25 @@ function decrementFromDistribution(qId){
           console.log(error);
           return next(error);
         }else if(countQue.countQuestion <= 0){
-          console.log("Error");
+          console.log("Error: Total number of Question is negative:: "+ countQue.countQuestion);
           return next(error);
         }
         else{
-          console.log("Decremented");
+          console.log("After updation Value of CountQuestion is:" + countQue.countQuestion);
         }
       })          
     }
   })
 }
 // function to delete from Quiz Collection
-function deleteFromQuiz(qId){
-  quiz.deleteOne({quesId : qId}, (error) => {
+function deleteFromQuiz(qId,usrId){
+  quiz.deleteOne({userId: usrId, quesId : qId}, (error) => {
     if (error) {
       console.log(error);
       return next(error);
     }else{
       console.log("Question deleted Successfully from Quiz Collection");
-      res.json("Deleted");
     }
   })
-
 }
 module.exports = questionRoute;
