@@ -96,12 +96,16 @@ questionRoute.route("/add-question").post((req, res, next) => {
 
   // Get Question By Id
   questionRoute.route("/question/get/:id").get((req, res, next) => {
-    question.findById(req.params.id, (error, data) => {
+    question.findOne({questionId: req.params.id}, (error, data) => {
       if (error) {
         console.log(error)
         return next(error);
       } else {
-        res.json(data);
+        res.json({
+          QuestionId: data.questionId,
+          Question: data.ques,
+          Answer: data.ans
+        });
       }
     });
   });
