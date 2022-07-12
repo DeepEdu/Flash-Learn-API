@@ -73,8 +73,8 @@ questionRoute.route("/add-question").post((req, res, next) => {
   }  
 
 // Delete Questions from Db
-questionRoute.route("/question/delete").delete((req, res) => {
-  var qId = req.body.questionId;
+questionRoute.route("/question/delete/:id").delete((req, res) => {
+  var qId = req.params.id;
   var usrId = req.body.userId;
   // Decrement total numberof Question for the Range of expertiselevel in  Distribution Collection
   updateDistribution(qId,usrId);
@@ -84,7 +84,7 @@ questionRoute.route("/question/delete").delete((req, res) => {
 
   // Deleting From Question Collection
   deleteFromQuestion(qId);
-  res.json("Question Deleted Successfully");
+  res.json("Question Deleted Successfully " + qId);
 })
 
 // function to delete from Question Collection
@@ -98,6 +98,7 @@ function deleteFromQuestion(qId){
     }
   })
 }
+
 // function to decrement total number of question from Distribution Collection
 function updateDistribution(qId, usrId){
   quiz.findOne( {UserId: usrId, quesId : qId} ,(error, data, next) => {
@@ -107,7 +108,7 @@ function updateDistribution(qId, usrId){
     }
     else {
       let x = data.expertiseLevel;
-      distribution.findOneAndUpdate({ "userId": data.userId, "RangeMin" : {$gt: x}, "RangeMax" : {$lte : x} }, 
+      distribution.findOneAndUpdate({ "userId": data.userId, "RangeMin" : {$lt: x}, "RangeMax" : {$gte : x} }, 
         { 
             $inc : {'countQuestion' : -1} 
         }, 
@@ -115,7 +116,8 @@ function updateDistribution(qId, usrId){
         if (error){
           console.log(error);
           return next(error);
-        }else if(countQue.countQuestion <= 0){
+        }
+        else if(countQue.countQuestion <= 0){
           console.log("Error: Total number of Question is negative:: "+ countQue.countQuestion);
           return next(error);
         }
@@ -137,4 +139,5 @@ function deleteFromQuiz(qId,usrId){
     }
   })
 }
+
 module.exports = questionRoute;
