@@ -73,7 +73,7 @@ questionRoute.route("/add-question").post((req, res, next) => {
 } 
  
 // update Question in Question Collection
-questionRoute.route("/update-question/:id").put((req, res, next) => {
+questionRoute.route("/question/update/:id").put((req, res, next) => {
   question.findOneAndUpdate( 
     req.params.id,
     { 
@@ -85,7 +85,11 @@ questionRoute.route("/update-question/:id").put((req, res, next) => {
         return next(error);
       } else {
         console.log("Question updated successfully!");
-        res.json(data);
+        res.json({
+          questionId: data.questionId,
+          ques: data.ques,
+          ans: data.ans
+        });
       }
     }
   );
