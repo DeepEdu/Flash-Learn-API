@@ -7,7 +7,7 @@ let distribution = new Schema({
     },    
   RangeMin: {
     type: Number,
-    default:1
+    default:0
   },
   RangeMax: {
     type: Number,
