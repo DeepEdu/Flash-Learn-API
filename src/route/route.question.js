@@ -78,92 +78,93 @@ questionRoute.route("/add-question").post((req, res, next) => {
     // quizQuestionCount is total question to be taken in Quiz
     var quizQuestionCount = req.body.count;
     const quizList = [];
-    distribution.aggregate([
-      { 
-        $match: {
-          userId: usrId
+    const lenQuestion = await findCountOfQuestions(usrId);
+    console.log("lenQuestion" +lenQuestion);
+      distribution
+      .find({userId: usrId},(error,data) => {
+        if(error){
+          console.log(error);
+          return next(error);
         }
-        },{
-        $group: { 
-          _id: "$userId", 
-          total: { 
-              $sum: "$countQuestion"
-            } 
-          }
-        }], function(error, totques) {
-          const lenQuestion = totques[0].total;
-        distribution
-        .find({userId: usrId},(error,data) => {
-          if(error){
-            console.log(error);
-            return next(error);
-          }
-          else{
-          // Function to find total number of Question of the user
-          console.log("Range of the user are " + data);
-          if(data.length == 0) {
-            console.log(" ERROR: Data Not found" + data.length);
-            return next(error);
-          }
-          for(let i =0; i<data.length; i++){
+        else{
+        // Function to find total number of Question of the user
+        console.log("Range of the user are " + data);
+        if(data.length == 0) {
+          console.log(" ERROR: Data Not found" + data.length);
+          return next(error);
+        }
+        for(let i =0; i<data.length; i++){
 
-            // Equity is total Question from each Range to be in Quiz
-            let equity = (data[i].countQuestion*quizQuestionCount)/lenQuestion;
-            console.log("equity" +equity)
-            const temp = data[i];
-            // Rounding Off equity to get the Question
-            equity = Math.round(equity);
+          // Equity is total Question from each Range to be in Quiz
+          let equity = (data[i].countQuestion*quizQuestionCount)/lenQuestion;
+          console.log("equity" +equity)
+          const temp = data[i];
+          // Rounding Off equity to get the Question
+          equity = Math.round(equity);
 
-            // Find equity number of QuestionIds from quiz collection, 
-            // whose expertiseLevel is in the current range.
-            quiz
-            .find({'userId': usrId, 'expertiseLevel' :{ $gt : temp.RangeMin, $lte: temp.RangeMax} })
-            .limit(equity)
-            .then(async(quizQuestion) => {
-              for (let i = 0; i < quizQuestion.length; i++) {
-                let qesId = quizQuestion[i].quesId;
-                // To find all Question with the given question Id
-                var theQuestion = await findInQuestionCollection(qesId);
-                // pushing Question to QuizList
-                quizList.push( schemaForQuiz(theQuestion) );
-                  console.log(quizList);
-                  /** 
-                   * if total Question length for Quiz is equal to 
-                   * the length of the question present in all range for the user 
-                  */
-                  if(quizList.length == quizQuestionCount){
-                    console.log(" QuizList Length is:"+ quizList.length);
-                    res.json(quizList);  
+          // Find equity number of QuestionIds from quiz collection, 
+          // whose expertiseLevel is in the current range.
+          quiz
+          .find({'userId': usrId, 'expertiseLevel' :{ $gt : temp.RangeMin, $lte: temp.RangeMax} })
+          .limit(equity)
+          .then(async(quizQuestion) => {
+            for (let i = 0; i < quizQuestion.length; i++) {
+              let qesId = quizQuestion[i].quesId;
+              // To find all Question with the given question Id
+              var theQuestion = await findQuestionDetail(qesId);
+              // pushing Question to QuizList
+              
+              quizList.push( schemaForQuiz(theQuestion) );
+                console.log("List of Question in Quiz:"+quizList);
+                /** 
+                 * if total Question length for Quiz is equal to 
+                 * the length of the question present in all range for the user 
+                */
+                if(quizList.length == quizQuestionCount){
+                  console.log(" QuizList Length is:"+ quizList.length);
+                  res.json(quizList);  
                   return;
-                  }
                 }
-              })
-            }
+              }
+            })
           }
-        })
+        }
       })
     });
 
 
-    function schemaForQuiz(theQuestion){
-      return (
-        {
-          QuestionId:theQuestion.questionId,
-          Question: theQuestion.ques,
-          Answer: theQuestion.ans
-        }); 
-    }
-  // function to find Total number of Question in
-  function totalNumberOfQuestion(data){
-    var totalSum =0;
-    for(let i =0; i< data.length; i++){
-      totalSum += data[i].countQuestion;
-    }
-    return totalSum;
+  function schemaForQuiz(theQuestion){
+    return (
+      {
+        QuestionId:theQuestion.questionId,
+        Question: theQuestion.ques,
+        Answer: theQuestion.ans
+      }); 
   }
+  // function to find Total number of Question in
+  async function findCountOfQuestions(usrId){
+     return distribution.aggregate([
+      {
+        $match: {
+          userId: usrId
+        }
+      }, {
+        $group: {
+          _id: "$userId",
+          total: {
+            $sum: "$countQuestion"
+          }
+        }
+      }
+    ])
+    .then((totques) =>{
+      console.log("total" + totques[0].total);
+      return totques[0].total;
+    })
+    }
   
   // function to find the Question from Qid in the Question Collection
-  async function findInQuestionCollection(qesId) {
+  async function findQuestionDetail(qesId) {
     return question
     .findOne({questionId: qesId})
     .then(( oneQuestion, error, next) => {
