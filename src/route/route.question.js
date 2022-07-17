@@ -73,41 +73,42 @@ questionRoute.route("/add-question").post((req, res, next) => {
   }  
 
   // Get all Question of the User
-  questionRoute.route("/question/get").get(async (req, res) => {
+  questionRoute.route("/question").get(async (req, res) => {
     const arr = [];
     quiz.find( {userId : req.body.userId} )
     .then(async (data) => {
         for(let i =0; i< data.length; i++){
-          let y = data[i].quesId;
-          let q = await inQuestion(y);
-          arr.push(q);
+          let qId = data[i].quesId;
+          arr.push(await findOneQuestionDetail(qId));
         }
         res.json(arr);
       })
   });
   
-  // function to find question from Question Collection
-  async function inQuestion(y){
-    return question.find( {questionId : y})
-    .then((data) => {
-      return data;
-    });
-  }
 
   // Get Question By Id
-  questionRoute.route("/question/get/:id").get((req, res, next) => {
-    question.findOne({questionId: req.params.id}, (error, data) => {
-      if (error) {
-        console.log(error)
-        return next(error);
-      } else {
-        res.json({
-          QuestionId: data.questionId,
-          Question: data.ques,
-          Answer: data.ans
-        });
-      }
-    });
+  questionRoute.route("/question/:id").get(async (req, res, next) => {
+    let qId = req.params.id;
+    var quesDetail =  await findOneQuestionDetail(qId);
+    res.json( schema(quesDetail) );
   });
   
+  // Function for  schema to be send 
+  function schema(theQuestion){
+    return (
+      {
+        QuestionId:theQuestion.questionId,
+        Question: theQuestion.ques,
+        Answer: theQuestion.ans
+      }); 
+  }
+
+  // Function to find Question Details
+  async function findOneQuestionDetail(quesId){
+    return question.findOne({questionId: quesId})
+    .then( ( data) => {
+      return data;
+    })
+    .catch(error => res.status(404).send("Question Id not found"))
+  }
   module.exports = questionRoute;
