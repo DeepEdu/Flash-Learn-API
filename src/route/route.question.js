@@ -73,7 +73,7 @@ questionRoute.route("/add-question").post((req, res, next) => {
   }  
 
 // Delete Questions from Db
-questionRoute.route("/question/delete/:id").delete((req, res) => {
+questionRoute.route("/question/:id").delete((req, res) => {
   var qId = req.params.id;
   var usrId = req.body.userId;
   // Decrement total numberof Question for the Range of expertiselevel in  Distribution Collection
@@ -128,6 +128,7 @@ function updateDistribution(qId, usrId){
     }
   })
 }
+
 // function to delete from Quiz Collection
 function deleteFromQuiz(qId,usrId){
   quiz.deleteOne({userId: usrId, quesId : qId}, (error) => {
