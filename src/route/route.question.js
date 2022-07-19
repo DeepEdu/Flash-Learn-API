@@ -27,7 +27,7 @@ questionRoute.route("/add-question").post((req, res, next) => {
   function addToQuizCollection(qId, UserId) {
     quiz.create(
       {
-        quesId: qId,
+        questionId: qId,
         userId: UserId
       },
       (error) => {
@@ -91,7 +91,7 @@ questionRoute.route("/question/:id").delete((req, res) => {
 function deleteFromQuestion(qId){
   question.deleteOne({questionId : qId}, (error,next) => {
     if (error) {
-      console.log(error);
+      console.log("Error deleting in Question Collection: "+error);
       return next(error);
     }else{
       console.log("Question with QuesId { " + qId + " }deleted Successfully from Question Collection  ");
@@ -101,20 +101,25 @@ function deleteFromQuestion(qId){
 
 // function to decrement total number of question from Distribution Collection
 function updateDistribution(qId, usrId){
-  quiz.findOne( {UserId: usrId, quesId : qId} ,(error, data, next) => {
+  quiz.findOne( {UserId: usrId, questionId : qId} ,(error, data, next) => {
     if (error) {
-      console.log(error);
+      console.log("Error: Failed to find question Id" + error);
       return next(error);
     }
     else {
-      let x = data.expertiseLevel;
-      distribution.findOneAndUpdate({ "userId": data.userId, "RangeMin" : {$lt: x}, "RangeMax" : {$gte : x} }, 
+      let explvl = data.expertiseLevel;
+      distribution.findOneAndUpdate(
+        { 
+          "userId": data.userId, 
+          "RangeMin" : {$lt: explvl}, 
+          "RangeMax" : {$gte : explvl} 
+        }, 
         { 
             $inc : {'countQuestion' : -1} 
         }, 
         (error, countQue) => {
         if (error){
-          console.log(error);
+          console.log("Failed to update Question" + error);
           return next(error);
         }
         else if(countQue.countQuestion <= 0){
@@ -131,9 +136,9 @@ function updateDistribution(qId, usrId){
 
 // function to delete from Quiz Collection
 function deleteFromQuiz(qId,usrId){
-  quiz.deleteOne({userId: usrId, quesId : qId}, (error) => {
+  quiz.deleteOne({userId: usrId, questionId : qId}, (error) => {
     if (error) {
-      console.log(error);
+      console.log("Error deleting in quiz Collection" +error);
       return next(error);
     }else{
       console.log("Question deleted Successfully from Quiz Collection");
