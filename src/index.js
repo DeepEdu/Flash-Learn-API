@@ -10,7 +10,7 @@ const questionRoute = require('./route/route.question')
 app.use(cors())
 app.use(bodyParser.json())
 
-app.use('/question/v1', questionRoute)
+app.use('/flash-learn-api/', questionRoute)
 
 // Connecting to MongoDb
 mongoose
