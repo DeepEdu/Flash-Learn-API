@@ -73,21 +73,20 @@ questionRoute.route("/add-question").post((req, res, next) => {
   }
 
   // Get Quiz Question 
-  questionRoute.route("/question/quiz/get").get(async (req, res, next) => {
+  questionRoute.route("/question/quiz").get(async (req, res, next) => {
     var usrId = req.body.userId;
     // quizQuestionCount is total question to be taken in Quiz
     var quizQuestionCount = req.body.count;
     const quizList = [];
-    const lenQuestion = await findCountOfQuestions(usrId);
-    console.log("lenQuestion" +lenQuestion);
+      // Function to find total number of Question of the user
+      const lenQuestion = await findCountOfQuestions(usrId);
       distribution
       .find({userId: usrId},(error,data) => {
         if(error){
-          console.log(error);
+          console.log("UserId not found:"+error);
           return next(error);
         }
         else{
-        // Function to find total number of Question of the user
         console.log("Range of the user are " + data);
         if(data.length == 0) {
           console.log(" ERROR: Data Not found" + data.length);
@@ -97,7 +96,7 @@ questionRoute.route("/add-question").post((req, res, next) => {
 
           // Equity is total Question from each Range to be in Quiz
           let equity = (data[i].countQuestion*quizQuestionCount)/lenQuestion;
-          console.log("equity" +equity)
+          console.log("Total Question in each Range:: " + equity);
           const temp = data[i];
           // Rounding Off equity to get the Question
           equity = Math.round(equity);
@@ -112,16 +111,16 @@ questionRoute.route("/add-question").post((req, res, next) => {
               let qesId = quizQuestion[i].quesId;
               // To find all Question with the given question Id
               var theQuestion = await findQuestionDetail(qesId);
+              console.log("theQuestion:: "+theQuestion);
               // pushing Question to QuizList
-              
               quizList.push( schemaForQuiz(theQuestion) );
-                console.log("List of Question in Quiz:"+quizList);
                 /** 
                  * if total Question length for Quiz is equal to 
                  * the length of the question present in all range for the user 
                 */
                 if(quizList.length == quizQuestionCount){
-                  console.log(" QuizList Length is:"+ quizList.length);
+                  console.log("QuizList Length is: "+ quizList.length);
+                  console.log("List of Question in Quiz: "+quizList);
                   res.json(quizList);  
                   return;
                 }
@@ -136,9 +135,9 @@ questionRoute.route("/add-question").post((req, res, next) => {
   function schemaForQuiz(theQuestion){
     return (
       {
-        QuestionId:theQuestion.questionId,
-        Question: theQuestion.ques,
-        Answer: theQuestion.ans
+        questionId:theQuestion.quesId,
+        ques: theQuestion.ques,
+        ans: theQuestion.ans
       }); 
   }
   // function to find Total number of Question in
@@ -158,7 +157,6 @@ questionRoute.route("/add-question").post((req, res, next) => {
       }
     ])
     .then((totques) =>{
-      console.log("total" + totques[0].total);
       return totques[0].total;
     })
     }
@@ -169,10 +167,11 @@ questionRoute.route("/add-question").post((req, res, next) => {
     .findOne({questionId: qesId})
     .then(( oneQuestion, error, next) => {
       if(error){
-        console.log(error);
+        console.log("Failed to find question Id: " +error);
         return next(error);
       }
       else{
+        // console.log("oneQuestion"+oneQuestion);
         return oneQuestion;
       }
     })
