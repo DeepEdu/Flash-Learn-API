@@ -150,15 +150,6 @@ questionRoute.route("/question/:id").put((req, res, next) => {
       })
     });
 
-
-  function schemaForQuiz(theQuestion){
-    return (
-      {
-        questionId:theQuestion.quesId,
-        ques: theQuestion.ques,
-        ans: theQuestion.ans
-      }); 
-  }
   // function to find Total number of Question in
   async function findCountOfQuestions(usrId){
      return distribution.aggregate([
@@ -180,21 +171,6 @@ questionRoute.route("/question/:id").put((req, res, next) => {
     })
     }
   
-  // function to find the Question from Qid in the Question Collection
-  async function findQuestionDetail(qesId) {
-    return question
-    .findOne({questionId: qesId})
-    .then(( oneQuestion, error, next) => {
-      if(error){
-        console.log("Failed to find question Id: " +error);
-        return next(error);
-      }
-      else{
-        // console.log("oneQuestion"+oneQuestion);
-        return oneQuestion;
-      }
-    })
-  }
   
   // Delete Questions from Db
 questionRoute.route("/question/:id").delete((req, res) => {
@@ -269,5 +245,52 @@ function deleteFromQuiz(qId,usrId){
     }
   })
 }
+
+  // Get all Question of the User
+  questionRoute.route("/question").get(async (req, res) => {
+    const arr = [];
+    quiz.find( {userId : req.body.userId} )
+    .then(async (data) => {
+        for(let i =0; i< data.length; i++){
+          let qId = data[i].questionId;
+          var qesDetail = await findQuestionDetail(qId);
+          arr.push(schemaForQuiz(qesDetail));
+        }
+        res.json(arr);
+      })
+  });
+  
+
+  // Get Question By Id
+  questionRoute.route("/question/:id").get(async (req, res, next) => {
+    let qId = req.params.id;
+    var quesDetail =  await findQuestionDetail(qId);
+    res.json( schemaForQuiz(quesDetail) );
+  });
+  
+  // function to find the Question from Qid in the Question Collection
+  async function findQuestionDetail(qesId) {
+    return question
+    .findOne({questionId: qesId})
+    .then(( oneQuestion, error, next) => {
+      if(error){
+        console.log("Failed to find question Id: " +error);
+        return next(error);
+      }
+      else{
+        return oneQuestion;
+      }
+    })
+  }
+
+  // Function for schema
+  function schemaForQuiz(theQuestion){
+    return (
+      {
+        questionId:theQuestion.questionId,
+        ques: theQuestion.ques,
+        ans: theQuestion.ans
+      }); 
+  }
 
   module.exports = questionRoute;
