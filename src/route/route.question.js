@@ -27,7 +27,7 @@ questionRoute.route("/add-question").post((req, res, next) => {
   function addToQuizCollection(qId, UserId) {
     quiz.create(
       {
-        quesId: qId,
+        questionId: qId,
         userId: UserId
       },
       (error) => {
@@ -101,6 +101,81 @@ questionRoute.route("/add-question").post((req, res, next) => {
           // Rounding Off equity to get the Question
           equity = Math.round(equity);
 
+// Delete Questions from Db
+questionRoute.route("/question/:id").delete((req, res) => {
+  var qId = req.params.id;
+  var usrId = req.body.userId;
+  // Decrement total numberof Question for the Range of expertiselevel in  Distribution Collection
+  updateDistribution(qId,usrId);
+
+  // Deleting Question from the Quiz Collections
+  deleteFromQuiz(qId,usrId);
+
+  // Deleting From Question Collection
+  deleteFromQuestion(qId);
+  res.json("Question Deleted Successfully " + qId);
+})
+
+// function to delete from Question Collection
+function deleteFromQuestion(qId){
+  question.deleteOne({questionId : qId}, (error,next) => {
+    if (error) {
+      console.log("Error deleting in Question Collection: "+error);
+      return next(error);
+    }else{
+      console.log("Question with QuesId { " + qId + " }deleted Successfully from Question Collection  ");
+    }
+  })
+}
+
+// function to decrement total number of question from Distribution Collection
+function updateDistribution(qId, usrId){
+  quiz.findOne( {UserId: usrId, questionId : qId} ,(error, data, next) => {
+    if (error) {
+      console.log("Error: Failed to find question Id" + error);
+      return next(error);
+    }
+    else {
+      let explvl = data.expertiseLevel;
+      distribution.findOneAndUpdate(
+        { 
+          "userId": data.userId, 
+          "RangeMin" : {$lt: explvl}, 
+          "RangeMax" : {$gte : explvl} 
+        }, 
+        { 
+            $inc : {'countQuestion' : -1} 
+        }, 
+        (error, countQue) => {
+        if (error){
+          console.log("Failed to update Question" + error);
+          return next(error);
+        }
+        else if(countQue.countQuestion <= 0){
+          console.log("Error: Total number of Question is negative:: "+ countQue.countQuestion);
+          return next(error);
+        }
+        else{
+          console.log("After updation Value of CountQuestion is:" + countQue.countQuestion);
+        }
+      })          
+    }
+  })
+}
+
+// function to delete from Quiz Collection
+function deleteFromQuiz(qId,usrId){
+  quiz.deleteOne({userId: usrId, questionId : qId}, (error) => {
+    if (error) {
+      console.log("Error deleting in quiz Collection" +error);
+      return next(error);
+    }else{
+      console.log("Question deleted Successfully from Quiz Collection");
+    }
+  })
+}
+
+module.exports = questionRoute;
           // Find equity number of QuestionIds from quiz collection, 
           // whose expertiseLevel is in the current range.
           quiz
