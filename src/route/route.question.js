@@ -9,15 +9,15 @@ let distribution = require("../model/distribution");
 
 
 //Add Questions to questionDB
-questionRoute.route("/add-question").post((req, res, next) => {
+questionRoute.route("/question").post((req, res, next) => {
     /* Generate Unique Id for current Question */
     var quesId = uuid.v4();
-    
+    let UserId = req.body.userId;
+  
     // Add Current Question to Question Collection
     res.json(addToQuestionCollection(quesId, req));
     
     // Add Current Question to Quiz Collection
-    let UserId = req.body.userId;
     addToQuizCollection(quesId,UserId);
     
     // Add Current Question to Distribution Collection
@@ -32,7 +32,7 @@ questionRoute.route("/add-question").post((req, res, next) => {
       },
       (error) => {
         if (error) {
-          console.log(error);
+          console.log("Failed to Cannot create quiz document"+error);
           return (next(error));
         }
       }
@@ -41,21 +41,23 @@ questionRoute.route("/add-question").post((req, res, next) => {
   function addToQuestionCollection(quesId, req){
     var newQuestion = {
       questionId: quesId,
-      ...req.body
+      ques: req.body.ques,
+      ans: req.body.ans
     }
     return question.create(newQuestion, (error) => {
       if (error) {
-        console.log(error);
+        console.log("Failed to create question document"+error);
         return next(error);
       }
     });
   }
+
   function addToDistributionCollection(UserId,next){
     distribution.countDocuments({userId: UserId}, function (error, count){ 
       if(count==0){
-        distribution.create({userId:UserId}, (error) => {
+        distribution.create({userId:  UserId}, (error) => {
           if (error) {
-            console.log(error);
+            console.log("Error: userId not found"+error);
             return next(error);
           } 
         })
@@ -66,33 +68,38 @@ questionRoute.route("/add-question").post((req, res, next) => {
         $inc : {'countQuestion' : 1}
       },(error) => {
         if (error) {
-          console.log(error);
+          console.log("Failed to update document"+error);
           return next(error);
         }
   })
 } 
  
 // update Question in Question Collection
-questionRoute.route("/question/update/:id").put((req, res, next) => {
-  question.findOneAndUpdate( 
-    req.params.id,
+questionRoute.route("/question/:id").put((req, res, next) => {
+  question.findOneAndUpdate( req.params.id, 
     { 
-      $set: req.body
+      ques: req.body.ques,
+      ans: req.body.ans
     },
-    (error, data) => {
+    (error, theQuestions) => {
       if (error) {
-        console.log(error);
+        console.log("Failed to find and update::"+error);
         return next(error);
       } else {
         console.log("Question updated successfully!");
-        res.json({
-          questionId: data.questionId,
-          ques: data.ques,
-          ans: data.ans
-        });
+        res.json(schemaForQuiz(theQuestions));
       }
     }
   );
 });
+
+function schemaForQuiz(theQuestion){
+  return (
+    {
+      questionId: theQuestion.questionId,
+      ques: theQuestion.ques,
+      ans: theQuestion.ans
+    }); 
+}
 
 module.exports = questionRoute;
