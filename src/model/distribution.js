@@ -15,7 +15,7 @@ let distribution = new Schema({
   },
   countQuestion:{
     type:Number,
-    default: 0
+    default: 1
   },
 }, {
   collection: 'distribution'
